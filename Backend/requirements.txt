@@ -1,0 +1,59 @@
+# =========================
+# Web API
+# =========================
+fastapi
+uvicorn[standard]
+python-multipart
+
+# =========================
+# LiveKit Realtime Voice
+# =========================
+livekit
+livekit-agents
+livekit-api
+
+# =========================
+# LiveKit Plugins
+# =========================
+livekit-plugins-rime
+livekit-plugins-deepgram
+# livekit-plugins-huggingface
+livekit-plugins-silero
+
+# =========================
+# LLM / AI
+# =========================
+huggingface-hub
+
+# =========================
+# Configuration
+# =========================
+python-dotenv
+
+# =========================
+# Data Validation / Models
+# =========================
+pydantic
+pydantic-settings
+
+# =========================
+# Database / Session Memory
+# =========================
+sqlalchemy
+aiosqlite
+
+# =========================
+# HTTP / Async
+# =========================
+httpx
+aiohttp
+
+# =========================
+# Utilities
+# =========================
+orjson
+
+# =========================
+# Logging / Monitoring
+# =========================
+structlog
