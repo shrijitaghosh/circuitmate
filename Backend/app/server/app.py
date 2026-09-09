@@ -5,7 +5,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from ..config.settings import settings, providers
 from ..domain.session import SessionStore
-
+from ..app.routes import router as auth_router
+from ..app.livekit_routes import router as livekit_router
+from ..routes.troubleshooting_routes import router as troubleshooting_router
 store = SessionStore()
 class TextTurn(BaseModel): text: str = Field(min_length=1); turnId: str | None = None
 
@@ -20,6 +22,9 @@ async def cleanup():
         await asyncio.sleep(min(settings.session_ttl_seconds, 60)); await store.remove_expired(settings.session_ttl_seconds)
 
 app = FastAPI(title='Voice Hardware Debugger Backend', version='1.0.0', lifespan=lifespan)
+app.include_router(auth_router)
+app.include_router(livekit_router)
+app.include_router(troubleshooting_router)
 app.add_middleware(CORSMiddleware, allow_origins=['*'] if settings.cors_origin == '*' else [settings.cors_origin], allow_credentials=True, allow_methods=['*'], allow_headers=['*'])
 
 @app.get('/health')
