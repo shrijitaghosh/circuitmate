@@ -6,7 +6,7 @@ uvicorn[standard]
 python-multipart
 email-validator
 python-jose
-pwdlib
+pwdlib[argon2]
 
 # =========================
 # LiveKit Realtime Voice
