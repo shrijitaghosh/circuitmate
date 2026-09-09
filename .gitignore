@@ -1,0 +1,21 @@
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Frontend
+Frontend/node_modules/
+Frontend/dist/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local database
+Backend/*.db
+
+# IDE
+.vscode/
+.idea/

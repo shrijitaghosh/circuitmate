@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CircuitMate — Testing &amp; Results</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #090d0b;
+    --bg-alt: #0d1310;
+    --panel: #0f1613;
+    --panel-hi: #131c17;
+    --border: rgba(140, 214, 178, 0.14);
+    --border-hi: rgba(140, 214, 178, 0.30);
+    --text-1: #e8f2ec;
+    --text-2: #9fb3aa;
+    --text-3: #647169;
+    --accent: #5eebae;
+    --accent-soft: rgba(94, 235, 174, 0.14);
+    --accent-glow: rgba(94, 235, 174, 0.5);
+    --copper: #d99a5b;
+    --copper-soft: rgba(217, 154, 91, 0.14);
+    --copper-glow: rgba(217, 154, 91, 0.5);
+    --danger: #e2705f;
+    --danger-soft: rgba(226, 112, 95, 0.14);
+    --font-sans: 'IBM Plex Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'IBM Plex Mono', 'SF Mono', monospace;
+  }
+
+  *{ box-sizing: border-box; margin: 0; padding: 0; }
+
+  body{
+    background: var(--bg);
+    color: var(--text-1);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+  }
+
+  body::before{
+    content:"";
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(var(--border) 1px, transparent 1px),
+      linear-gradient(90deg, var(--border) 1px, transparent 1px);
+    background-size: 56px 56px;
+    opacity: 0.10;
+    pointer-events: none;
+  }
+
+  button{ font-family: inherit; cursor: pointer; }
+  a{ color: inherit; text-decoration: none; }
+
+  .dot{
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 8px 1px var(--accent-glow);
+    display: inline-block; flex-shrink: 0;
+  }
+  .dot.pulse{ animation: dotpulse 2.2s ease-in-out infinite; }
+  @keyframes dotpulse{ 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+  .tick{ width: 12px; height: 1px; background: var(--accent); display: inline-block; }
+
+  /* ---------------- TOP BAR ---------------- */
+
+  .topbar{
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(9,13,11,0.85);
+    backdrop-filter: blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+  .topbar-inner{
+    max-width: 1400px; margin: 0 auto;
+    padding: 15px 36px;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 20px;
+  }
+  .brand{ display: flex; align-items: center; gap: 9px; font-weight: 600; font-size: 15.5px; }
+  .brand svg{ width: 26px; height: 26px; flex-shrink: 0; }
+
+  .topbar-label{
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-3);
+    padding-left: 12px; margin-left: 4px; border-left: 1px solid var(--border);
+  }
+
+  .nav{ display: flex; align-items: center; gap: 28px; font-size: 13.5px; color: var(--text-2); margin-left: auto; margin-right: 28px; }
+  .nav a{ position: relative; padding: 4px 0; transition: color 0.15s ease; }
+  .nav a:hover{ color: var(--text-1); }
+  .nav a.active{ color: var(--accent); }
+  .nav a.active::after{
+    content: ""; position: absolute; left: 0; right: 0; bottom: -4px; height: 1px; background: var(--accent);
+  }
+
+  .status-pill{
+    display: flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono); font-size: 12px; color: var(--text-2);
+    padding: 6px 12px; border: 1px solid var(--border); border-radius: 100px;
+    background: var(--panel); white-space: nowrap;
+  }
+
+  /* ---------------- LAYOUT ---------------- */
+
+  .page{ max-width: 1400px; margin: 0 auto; padding: 34px 36px 0; position: relative; z-index: 1; }
+
+  .page-head{ margin-bottom: 30px; }
+  .page-head h1{ font-size: 27px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 8px; }
+  .page-head p{ font-size: 14px; color: var(--text-2); max-width: 620px; }
+
+  .card{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 24px;
+  }
+
+  .card-title{
+    display: flex; align-items: center; gap: 9px;
+    font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.10em; text-transform: uppercase;
+    color: var(--text-3); margin-bottom: 18px;
+  }
+
+  /* ---------------- METRIC CARDS ---------------- */
+
+  .metrics{
+    display: grid;
+    grid-template-columns: 1.4fr 1fr 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 22px;
+  }
+
+  .metric{
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px 24px;
+  }
+  .metric.emphasis{
+    background: linear-gradient(180deg, rgba(94,235,174,0.08), var(--panel) 65%);
+    border: 1px solid rgba(94,235,174,0.4);
+    box-shadow: 0 0 0 1px rgba(94,235,174,0.06), 0 20px 50px -30px var(--accent-glow);
+  }
+
+  .metric-label{
+    font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-3); margin-bottom: 12px;
+  }
+  .metric.emphasis .metric-label{ color: var(--accent); }
+
+  .metric-value{ font-size: 34px; font-weight: 600; letter-spacing: -0.01em; margin-bottom: 8px; }
+  .metric.emphasis .metric-value{ color: var(--accent); font-size: 40px; }
+
+  .metric-sub{ font-size: 12.5px; color: var(--text-2); }
+
+  /* ---------------- PERFORMANCE + LATENCY ROW ---------------- */
+
+  .row-2{ display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px; }
+
+  .gauge-wrap{ display: flex; align-items: center; gap: 28px; flex-wrap: wrap; }
+
+  .radial-gauge{
+    width: 168px; height: 168px; border-radius: 50%; flex-shrink: 0;
+    background: conic-gradient(var(--accent) 0% var(--gauge-pct, 94%), rgba(140,214,178,0.08) var(--gauge-pct, 94%) 100%);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .radial-gauge-inner{
+    width: 128px; height: 128px; border-radius: 50%;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .radial-gauge-inner .num{ font-size: 28px; font-weight: 700; color: var(--accent); }
+  .radial-gauge-inner .lbl{ font-family: var(--font-mono); font-size: 10px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+
+  .gauge-legend{ display: flex; flex-direction: column; gap: 12px; }
+  .gauge-legend-item{ display: flex; align-items: center; gap: 10px; font-size: 13.5px; }
+  .swatch{ width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+  .swatch.correct{ background: var(--accent); }
+  .swatch.incorrect{ background: rgba(140,214,178,0.12); border: 1px solid var(--border-hi); }
+  .gauge-legend-item .n{ font-family: var(--font-mono); font-weight: 600; color: var(--text-1); margin-left: auto; }
+
+  /* latency chart */
+  .latency-chart{ display: flex; align-items: flex-end; gap: 26px; height: 150px; padding: 0 6px 0; }
+  .lat-bar-col{ display: flex; flex-direction: column; align-items: center; gap: 10px; flex: 1; height: 100%; justify-content: flex-end; }
+  .lat-bar{ width: 40px; border-radius: 6px 6px 3px 3px; }
+  .lat-bar-num{ font-family: var(--font-mono); font-size: 13px; font-weight: 600; }
+  .lat-bar-label{ font-family: var(--font-mono); font-size: 10.5px; color: var(--text-3); text-transform: uppercase; letter-spacing: 0.05em; }
+
+  .latency-summary{ display: flex; gap: 22px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+  .latency-summary .item{ font-size: 12.5px; color: var(--text-2); }
+  .latency-summary .item b{ color: var(--text-1); font-family: var(--font-mono); }
+
+  /* ---------------- BREAKDOWN + VOICE STATUS ---------------- */
+
+  .kv-list{ display: flex; flex-direction: column; gap: 12px; }
+  .kv{ display: flex; align-items: baseline; justify-content: space-between; font-size: 13.5px; }
+  .kv span:first-child{ color: var(--text-3); font-family: var(--font-mono); font-size: 12px; }
+  .kv span:last-child{ color: var(--text-1); font-weight: 600; font-family: var(--font-mono); }
+
+  .rime-status-big{
+    display: flex; align-items: center; gap: 10px;
+    font-size: 20px; font-weight: 700; color: var(--accent);
+    margin-bottom: 20px;
+  }
+  .rime-status-big .dot{ width: 10px; height: 10px; }
+
+  /* ---------------- FILTERS ---------------- */
+
+  .filters{ display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .filter-btn{
+    font-family: var(--font-mono); font-size: 12px;
+    padding: 8px 16px; border-radius: 100px;
+    border: 1px solid var(--border); background: transparent; color: var(--text-2);
+    transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  }
+  .filter-btn:hover{ border-color: var(--border-hi); color: var(--text-1); }
+  .filter-btn.active{ background: var(--accent-soft); border-color: rgba(94,235,174,0.4); color: var(--accent); }
+
+  /* ---------------- TABLE ---------------- */
+
+  .table-wrap{ overflow-x: auto; }
+  table{ width: 100%; border-collapse: collapse; min-width: 640px; }
+  thead th{
+    text-align: left; font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--text-3); padding: 0 14px 12px; border-bottom: 1px solid var(--border); font-weight: 500;
+  }
+  tbody td{ padding: 14px; font-size: 13.5px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tbody tr:last-child td{ border-bottom: none; }
+  tbody tr{ transition: background 0.15s ease; }
+  tbody tr:hover{ background: var(--panel-hi); }
+
+  .mono{ font-family: var(--font-mono); }
+  .test-input{ color: var(--text-2); }
+  .test-input .corr{ color: var(--copper); }
+
+  .result-badge{
+    display: inline-flex; align-items: center; gap: 6px;
+    font-family: var(--font-mono); font-size: 11.5px; font-weight: 600;
+    padding: 5px 11px; border-radius: 100px;
+  }
+  .result-badge.pass{ background: var(--accent-soft); color: var(--accent); border: 1px solid rgba(94,235,174,0.35); }
+  .result-badge.fail{ background: var(--danger-soft); color: var(--danger); border: 1px solid rgba(226,112,95,0.4); }
+  .result-badge.low{ background: var(--copper-soft); color: var(--copper); border: 1px solid rgba(217,154,91,0.4); }
+
+  tr[data-hidden="true"]{ display: none; }
+
+  /* ---------------- FOOTER ---------------- */
+
+  .statusbar{ margin-top: 26px; border-top: 1px solid var(--border); background: var(--bg-alt); }
+  .statusbar-inner{
+    max-width: 1400px; margin: 0 auto; padding: 14px 36px;
+    display: flex; flex-wrap: wrap; gap: 30px;
+    font-family: var(--font-mono); font-size: 12px;
+  }
+  .sb-item{ display: flex; align-items: center; gap: 8px; }
+  .sb-label{ color: var(--text-3); }
+  .sb-value{ color: var(--text-2); }
+  .sb-value.ok{ color: var(--accent); }
+
+  /* ---------------- RESPONSIVE ---------------- */
+
+  @media (max-width: 1180px){
+    .metrics{ grid-template-columns: 1fr 1fr; }
+    .row-2{ grid-template-columns: 1fr; }
+  }
+  @media (max-width: 900px){
+    .nav{ display: none; }
+    .topbar-label{ display: none; }
+  }
+  @media (max-width: 640px){
+    .page{ padding: 24px 18px 0; }
+    .metrics{ grid-template-columns: 1fr; }
+    .topbar-inner{ padding: 14px 18px; }
+    .statusbar-inner{ padding: 14px 18px; gap: 16px; }
+    .gauge-wrap{ justify-content: center; }
+    .latency-chart{ gap: 14px; }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    *{ animation-duration: 0.001ms !important; transition: none !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" fill="none">
+        <rect x="1" y="1" width="30" height="30" rx="7" stroke="#5eebae" stroke-opacity="0.5" stroke-width="1"/>
+        <circle cx="10" cy="10" r="2.2" fill="#5eebae"/>
+        <circle cx="22" cy="22" r="2.2" fill="#5eebae" fill-opacity="0.5"/>
+        <path d="M10 12.2V16.5C10 17.6 10.9 18.5 12 18.5H16.5" stroke="#5eebae" stroke-width="1.4" fill="none"/>
+        <path d="M16.5 18.5H20C21.1 18.5 22 17.6 22 16.5V19.8" stroke="#5eebae" stroke-opacity="0.5" stroke-width="1.4" fill="none"/>
+        <circle cx="16.5" cy="18.5" r="1.4" fill="#e8f2ec"/>
+      </svg>
+      <span>CircuitMate</span>
+    </div>
+    <span class="topbar-label">Testing &amp; Results</span>
+    <nav class="nav">
+      <a href="#">Dashboard</a>
+      <a href="#">Troubleshooting</a>
+      <a href="#" class="active">Results</a>
+    </nav>
+    <span class="status-pill"><span class="dot pulse"></span>Rime Active &#10003;</span>
+  </div>
+</header>
+
+<main class="page">
+
+  <div class="page-head">
+    <h1>Voice Correction Performance</h1>
+    <p>Evaluation of CircuitMate's ability to detect and correctly process spoken corrections.</p>
+  </div>
+
+  <!-- KEY METRICS -->
+  <div class="metrics" id="metricsRow"></div>
+
+  <!-- CORRECTION PERFORMANCE + LATENCY -->
+  <div class="row-2">
+    <div class="card">
+      <div class="card-title"><span class="tick"></span>Correction Accuracy</div>
+      <div class="gauge-wrap">
+        <div class="radial-gauge" id="accuracyGauge">
+          <div class="radial-gauge-inner">
+            <span class="num" id="accuracyGaugeNum">94%</span>
+            <span class="lbl">Accuracy</span>
+          </div>
+        </div>
+        <div class="gauge-legend">
+          <div class="gauge-legend-item"><span class="swatch correct"></span>Correct<span class="n" id="correctCount">47</span></div>
+          <div class="gauge-legend-item"><span class="swatch incorrect"></span>Incorrect<span class="n" id="incorrectCount">3</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="tick"></span>Response Latency</div>
+      <div class="latency-chart" id="latencyChart"></div>
+      <div class="latency-summary" id="latencySummary"></div>
+    </div>
+  </div>
+
+  <!-- TEST BREAKDOWN + VOICE STATUS -->
+  <div class="row-2">
+    <div class="card">
+      <div class="card-title"><span class="tick"></span>Test Results</div>
+      <div class="kv-list" id="breakdownList"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><span class="tick"></span>Rime TTS Status</div>
+      <div class="rime-status-big"><span class="dot pulse"></span><span id="rimeStatusText">ACTIVE</span></div>
+      <div class="kv-list" id="voiceStatusList"></div>
+    </div>
+  </div>
+
+  <!-- TEST CASES TABLE -->
+  <div class="card" style="margin-bottom: 22px;">
+    <div class="card-title"><span class="tick"></span>Correction Test Cases</div>
+    <div class="filters" id="filters"></div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Test</th>
+            <th>Spoken Input</th>
+            <th>Expected</th>
+            <th>Detected</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tbody id="testTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<footer class="statusbar">
+  <div class="statusbar-inner">
+    <div class="sb-item"><span class="sb-label">Speech Recognition</span><span class="sb-value ok">Connected &#10003;</span></div>
+    <div class="sb-item"><span class="sb-label">Rime TTS</span><span class="sb-value ok">Active &#10003;</span></div>
+    <div class="sb-item"><span class="sb-label">Backend</span><span class="sb-value">Mock / Test Mode</span></div>
+  </div>
+</footer>
+
+<script>
+/* =========================================================================
+   MOCK RESULTS DATA
+   ---------------------------------------------------------------------
+   Everything below is placeholder data shaped the way a real results API
+   would return it. When the testing backend is ready, replace this
+   object with a fetch() call (e.g. `const RESULTS = await fetch('/api/
+   results').then(r => r.json())`) that resolves to the same shape —
+   the render functions further down do not need to change.
+   ========================================================================= */
+
+const RESULTS = {
+  metrics: {
+    correctionAccuracy: { value: 94, unit: '%', sub: 'Correctly detected corrections' },
+    testsCompleted: { value: 50, sub: 'Voice correction scenarios' },
+    successRate: { value: '46 / 50', sub: 'Successful tests' },
+    avgLatency: { value: 420, unit: ' ms', sub: 'Speech \u2192 response' },
+  },
+
+  accuracy: { correct: 47, incorrect: 3 }, // feeds the radial gauge card
+
+  breakdown: {
+    totalTests: 50,
+    successful: 47,
+    failed: 3,
+    correctionDetected: 48,
+    falseCorrections: 1,
+    lowConfidenceCases: 4,
+  },
+
+  latency: { average: 420, best: 280, worst: 780 },
+
+  voiceEngine: {
+    provider: 'Rime',
+    status: 'Operational',
+    successfulResponses: '48/50',
+    ttsFailures: 2,
+  },
+
+  testCases: [
+    { id: 1, spoken: ['GPIO 13', '\u2026 wait, GPIO 12'], expected: '12', detected: '12', result: 'pass' },
+    { id: 2, spoken: ['Use pin 5', '\u2026 actually pin 6'], expected: '6', detected: '6', result: 'pass' },
+    { id: 3, spoken: ['GPIO 18', '\u2026 sorry, GPIO 19'], expected: '19', detected: '18', result: 'fail' },
+    { id: 4, spoken: ['Pin 7', '\u2026 no, pin 8'], expected: '8', detected: '8', result: 'pass' },
+    { id: 5, spoken: ['GPIO 21', '\u2026 maybe GPIO 22?'], expected: '22', detected: '22', result: 'low' },
+  ],
+};
+
+/* ---------------------------------------------------------------------
+   RENDER FUNCTIONS — pure DOM writes from the RESULTS object above.
+--------------------------------------------------------------------- */
+
+function renderMetrics(){
+  const m = RESULTS.metrics;
+  const el = document.getElementById('metricsRow');
+  el.innerHTML = `
+    <div class="metric emphasis">
+      <div class="metric-label">Correction Accuracy</div>
+      <div class="metric-value">${m.correctionAccuracy.value}${m.correctionAccuracy.unit}</div>
+      <div class="metric-sub">${m.correctionAccuracy.sub}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Tests Completed</div>
+      <div class="metric-value">${m.testsCompleted.value}</div>
+      <div class="metric-sub">${m.testsCompleted.sub}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Success Rate</div>
+      <div class="metric-value">${m.successRate.value}</div>
+      <div class="metric-sub">${m.successRate.sub}</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Avg Response Latency</div>
+      <div class="metric-value">${m.avgLatency.value}${m.avgLatency.unit}</div>
+      <div class="metric-sub">${m.avgLatency.sub}</div>
+    </div>
+  `;
+}
+
+function renderAccuracyGauge(){
+  const { correct, incorrect } = RESULTS.accuracy;
+  const total = correct + incorrect;
+  const pct = Math.round((correct / total) * 100);
+  document.getElementById('accuracyGauge').style.setProperty('--gauge-pct', pct + '%');
+  document.getElementById('accuracyGaugeNum').textContent = pct + '%';
+  document.getElementById('correctCount').textContent = correct;
+  document.getElementById('incorrectCount').textContent = incorrect;
+}
+
+function renderLatency(){
+  const { average, best, worst } = RESULTS.latency;
+  const max = worst;
+  const bars = [
+    { label: 'Best', value: best, color: 'var(--accent)' },
+    { label: 'Average', value: average, color: 'var(--text-2)' },
+    { label: 'Worst', value: worst, color: 'var(--copper)' },
+  ];
+  document.getElementById('latencyChart').innerHTML = bars.map(b => `
+    <div class="lat-bar-col">
+      <span class="lat-bar-num" style="color:${b.color}">${b.value} ms</span>
+      <div class="lat-bar" style="height:${(b.value / max) * 100}%; background:${b.color};"></div>
+      <span class="lat-bar-label">${b.label}</span>
+    </div>
+  `).join('');
+
+  document.getElementById('latencySummary').innerHTML = `
+    <div class="item">Average <b>${average} ms</b></div>
+    <div class="item">Best <b>${best} ms</b></div>
+    <div class="item">Worst <b>${worst} ms</b></div>
+  `;
+}
+
+function renderBreakdown(){
+  const b = RESULTS.breakdown;
+  document.getElementById('breakdownList').innerHTML = `
+    <div class="kv"><span>Total tests</span><span>${b.totalTests}</span></div>
+    <div class="kv"><span>Successful</span><span>${b.successful}</span></div>
+    <div class="kv"><span>Failed</span><span>${b.failed}</span></div>
+    <div class="kv"><span>Correction detected</span><span>${b.correctionDetected}</span></div>
+    <div class="kv"><span>False corrections</span><span>${b.falseCorrections}</span></div>
+    <div class="kv"><span>Low-confidence cases</span><span>${b.lowConfidenceCases}</span></div>
+  `;
+}
+
+function renderVoiceEngine(){
+  const v = RESULTS.voiceEngine;
+  document.getElementById('voiceStatusList').innerHTML = `
+    <div class="kv"><span>Provider</span><span>${v.provider}</span></div>
+    <div class="kv"><span>Status</span><span>${v.status}</span></div>
+    <div class="kv"><span>Successful responses</span><span>${v.successfulResponses}</span></div>
+    <div class="kv"><span>TTS failures</span><span>${v.ttsFailures}</span></div>
+  `;
+}
+
+const RESULT_META = {
+  pass: { label: '\u2713 PASS', cls: 'pass' },
+  fail: { label: '\u2717 FAIL', cls: 'fail' },
+  low:  { label: '\u26a0 LOW CONF.', cls: 'low' },
+};
+
+let activeFilter = 'all';
+
+function renderTable(){
+  const tbody = document.getElementById('testTableBody');
+  tbody.innerHTML = RESULTS.testCases.map(t => {
+    const meta = RESULT_META[t.result];
+    const visible = activeFilter === 'all' || activeFilter === t.result;
+    return `
+      <tr data-hidden="${!visible}">
+        <td class="mono">${t.id}</td>
+        <td class="test-input">"${t.spoken[0]}<span class="corr">${t.spoken[1]}</span>"</td>
+        <td class="mono">${t.expected}</td>
+        <td class="mono">${t.detected}</td>
+        <td><span class="result-badge ${meta.cls}">${meta.label}</span></td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function renderFilters(){
+  const options = [
+    { key: 'all', label: 'All' },
+    { key: 'pass', label: 'Passed' },
+    { key: 'fail', label: 'Failed' },
+    { key: 'low', label: 'Low Confidence' },
+  ];
+  const el = document.getElementById('filters');
+  el.innerHTML = options.map(o =>
+    `<button class="filter-btn${o.key === activeFilter ? ' active' : ''}" data-filter="${o.key}">${o.label}</button>`
+  ).join('');
+
+  el.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeFilter = btn.dataset.filter;
+      renderFilters();
+      renderTable();
+    });
+  });
+}
+
+/* ---------------------------------------------------------------------
+   INIT
+--------------------------------------------------------------------- */
+renderMetrics();
+renderAccuracyGauge();
+renderLatency();
+renderBreakdown();
+renderVoiceEngine();
+renderFilters();
+renderTable();
+</script>
+
+</body>
+</html>
