@@ -5,6 +5,7 @@ fastapi
 uvicorn[standard]
 python-multipart
 email-validator
+python-jose
 
 # =========================
 # LiveKit Realtime Voice
