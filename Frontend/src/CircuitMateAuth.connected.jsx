@@ -48,15 +48,26 @@ async function authenticate(mode, fields) {
 
   const data = await response.json().catch(() => ({}));
 
-  if (!response.ok) {
-    return {
-      ok: false,
-      message:
-        data.detail ||
-        data.message ||
-        "Authentication failed",
-    };
+ if (!response.ok) {
+  let message = "Authentication failed";
+
+  if (typeof data.detail === "string") {
+    message = data.detail;
+  } else if (Array.isArray(data.detail)) {
+    message = data.detail
+      .map((err) => err.msg || "Invalid input")
+      .join(", ");
+  } else if (data.detail && typeof data.detail === "object") {
+    message = data.detail.msg || JSON.stringify(data.detail);
+  } else if (typeof data.message === "string") {
+    message = data.message;
   }
+
+  return {
+    ok: false,
+    message,
+  };
+}
 
   // The backend must return a JWT in access_token.
   if (!data.access_token) {
