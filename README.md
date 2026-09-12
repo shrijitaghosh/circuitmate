@@ -108,3 +108,4 @@ Notes:
 CircuitMate successfully demonstrates a functional voice-based AI troubleshooting assistant for everything . It can understand user queries, provide relevant troubleshooting guidance, and communicate responses through voice. While it currently relies on a trial-and-error approach and cannot physically inspect hardware, it significantly reduces the difficulty of diagnosing common hardware problems through accessible, hands-free assistance.
 Here is the working link of our website:
 https://circuitmate.vercel.app
+**(For authentication while creating an account in CircuitMate an 8 character password is required.)**
